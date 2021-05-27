@@ -12,13 +12,14 @@ install:
 
 build: false
 
+# FIXME: Remove +nightly once https://github.com/rust-lang/rust/pull/72981 has been stabilized
 test_script:
-  - cargo test --verbose --no-default-features
-  - cargo test --verbose --no-default-features --features="force_backtrace"
-  - cargo test --verbose --no-default-features --features="derive_display"
-  - cargo test --verbose --no-default-features --features="force_backtrace,derive_display"
+  - cargo +nightly test --verbose --no-default-features
+  - cargo +nightly test --verbose --no-default-features --features="force_backtrace"
+  - cargo +nightly test --verbose --no-default-features --features="derive_display"
+  - cargo +nightly test --verbose --no-default-features --features="force_backtrace,derive_display"
 
-  - cargo test --verbose --release --no-default-features
-  - cargo test --verbose --release --no-default-features --features="force_backtrace"
-  - cargo test --verbose --release --no-default-features --features="derive_display"
-  - cargo test --verbose --release --no-default-features --features="force_backtrace,derive_display"
+  - cargo +nightly test --verbose --release --no-default-features
+  - cargo +nightly test --verbose --release --no-default-features --features="force_backtrace"
+  - cargo +nightly test --verbose --release --no-default-features --features="derive_display"
+  - cargo +nightly test --verbose --release --no-default-features --features="force_backtrace,derive_display"
