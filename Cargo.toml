@@ -1,0 +1,30 @@
+[package]
+name = "ebacktrace"
+version = "0.1.0"
+edition = "2018"
+authors = ["KizzyCode Software Labs./Keziah Biermann <development@kizzycode.de>"]
+keywords = ["error", "backtrace"]
+categories = ["rust-patterns"]
+description = "A simple error wrapper which captures a backtrace and can carry an optional textual description"
+license = "BSD-2-Clause OR MIT"
+repository = "https://github.com/KizzyCode/ebacktrace-rust"
+readme = "README.md"
+
+
+[badges]
+travis-ci = { repository = "KizzyCode/ebacktrace-rust" }
+appveyor = { repository = "KizzyCode/ebacktrace-rust" }
+
+
+[features]
+default = ["force_backtrace", "derive_display"]
+force_backtrace = []
+derive_display = []
+
+
+[profile.release]
+overflow-checks = true
+
+
+[profile.bench]
+overflow-checks = true
