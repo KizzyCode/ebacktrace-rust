@@ -1,6 +1,7 @@
 language: rust
+# FIXME: Use stable once https://github.com/rust-lang/rust/pull/72981 has been stabilized
 rust:
-  - stable
+  - nightly
 
 arch:
   - amd64
