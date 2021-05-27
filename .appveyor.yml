@@ -4,7 +4,7 @@ environment:
     - TARGET: i686-pc-windows-msvc
 
 install:
-  - choco install choco install rustup.install
+  - choco install rustup.install
   - rustup.exe toolchain install nightly-msvc
 
 build: false
