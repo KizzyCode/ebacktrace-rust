@@ -17,7 +17,8 @@ description of the error.
 
 ## Example
 ```rust
-use ebacktrace::Etrace;
+#![feature(backtrace)]
+#[macro_use] extern crate ebacktrace;
 
 /// The error kind
 #[derive(Debug, Copy, Clone)]
@@ -26,8 +27,11 @@ enum ErrorKind {
     Testolope
 }
 
+// Define our custom error type
+define_error!(Error);
+
 /// A function that will always fail
-fn will_fail() -> Result<(), Etrace<ErrorKind>> {
+fn will_fail() -> Result<(), Error<ErrorKind>> {
     Err(ErrorKind::Testolope)?
 }
 
