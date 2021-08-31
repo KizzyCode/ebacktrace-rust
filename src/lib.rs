@@ -1,11 +1,10 @@
 //! [![License BSD-2-Clause](https://img.shields.io/badge/License-BSD--2--Clause-blue.svg)](https://opensource.org/licenses/BSD-2-Clause)
 //! [![License MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-//! [![Travis CI](https://travis-ci.com/KizzyCode/ebacktrace-rust.svg?branch=master)](https://travis-ci.com/KizzyCode/ebacktrace-rust)
 //! [![AppVeyor CI](https://ci.appveyor.com/api/projects/status/github/KizzyCode/ebacktrace-rust?svg=true)](https://ci.appveyor.com/project/KizzyCode/ebacktrace-rust)
 //! [![docs.rs](https://docs.rs/ebacktrace/badge.svg)](https://docs.rs/ebacktrace)
 //! [![crates.io](https://img.shields.io/crates/v/ebacktrace.svg)](https://crates.io/crates/ebacktrace)
 //! [![Download numbers](https://img.shields.io/crates/d/ebacktrace.svg)](https://crates.io/crates/ebacktrace)
-//! [![dependency status](https://deps.rs/crate/ebacktrace/0.1.0/status.svg)](https://deps.rs/crate/ebacktrace/0.1.0)
+//! [![dependency status](https://deps.rs/crate/ebacktrace/0.3.0/status.svg)](https://deps.rs/crate/ebacktrace/0.3.0)
 //! 
 //! 
 //! # `ebacktrace`
@@ -16,8 +15,7 @@
 //! 
 //! ## Example
 //! ```should_panic
-//! #![feature(backtrace)]
-//! #[macro_use] extern crate ebacktrace;
+//! use ebacktrace::define_error;
 //! 
 //! /// The error kind
 //! #[derive(Debug, Copy, Clone)]
@@ -39,13 +37,14 @@
 //! ```
 //! 
 //! ## Features
-//! This crate currently has two feature gates:
-//!   - `force_backtrace` (enabled by default): If this feature is enabled, the crate uses `Backtrace::force_capture`
-//!     (instead of `Backtrace::capture`) to always capture a backtrace regardless of whether `RUST_BACKTRACE` is set or
-//!     not.
+//! This crate currently has one feature gate:
 //!   - `derive_display` (enabled by default): Implements the `Display`-trait for `Etrace<MyType>` using the `Debug`
 //!     representation of `MyType` (instead of the `Display` representation). This way you can pretty-print the underlying
 //!     error types without the necessity to manually implement the `Display`-trait for them.
+
+/// Implements a backtrace
+#[doc(hidden)]
+pub mod backtrace;
 
 
 /// Defines a custom error with descripion
@@ -56,12 +55,12 @@ macro_rules! define_error {
         pub struct $name<E> {
             err: E,
             desc: std::borrow::Cow<'static, str>,
-            backtrace: std::sync::Arc<std::backtrace::Backtrace>
+            backtrace: std::sync::Arc<$crate::backtrace::Backtrace>
         }
         impl<E> $name<E> {
             /// Wraps an error `err`
             pub fn new(err: E) -> Self {
-                let backtrace = (Self::capture_fn())();
+                let backtrace = $crate::backtrace::Backtrace::capture();
                 Self {
                     err,
                     desc: std::borrow::Cow::Borrowed(""),
@@ -70,7 +69,7 @@ macro_rules! define_error {
             }
             /// Wraps an error `err` together with a description `desc`
             pub fn with_str(err: E, desc: &'static str) -> Self {
-                let backtrace = (Self::capture_fn())();
+                let backtrace = $crate::backtrace::Backtrace::capture();
                 Self {
                     err,
                     desc: std::borrow::Cow::Borrowed(desc),
@@ -79,7 +78,7 @@ macro_rules! define_error {
             }
             /// Wraps an error `err` together with a description `desc`
             pub fn with_string<S>(err: E, desc: S) -> Self where S: std::string::ToString {
-                let backtrace = (Self::capture_fn())();
+                let backtrace = $crate::backtrace::Backtrace::capture();
                 Self {
                     err,
                     desc: std::borrow::Cow::Owned(desc.to_string()),
@@ -94,21 +93,6 @@ macro_rules! define_error {
             /// The error description
             pub const fn desc(&self) -> &std::borrow::Cow<'static, str> {
                 &self.desc
-            }
-            /// The backtrace
-            pub fn backtrace(&self) -> &std::backtrace::Backtrace {
-                self.backtrace.as_ref()
-            }
-
-            /// Returns a function to create a backtrace
-            ///
-            /// This function exists to implement the `force_backtrace` feature
-            #[inline]
-            fn capture_fn() -> impl FnOnce() -> std::backtrace::Backtrace {
-                match cfg!(feature = "force_backtrace") {
-                    true => std::backtrace::Backtrace::force_capture,
-                    false => std::backtrace::Backtrace::capture
-                }
             }
         }
         impl<E> std::ops::Deref for $name<E> {
@@ -127,9 +111,12 @@ macro_rules! define_error {
             fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
                 self.err.source()
             }
-            fn backtrace(&self) -> Option<&std::backtrace::Backtrace> {
+            // TODO: Reimplement when `std::backtrace::Backtrace` becomes stable
+            /*
+            fn backtrace(&self) -> Option<&$crate::backtrace::Backtrace> {
                 Some(&self.backtrace)
             }
+            */
         }
         // Debug
         impl<E> std::fmt::Debug for $name<E> where E: std::fmt::Debug {

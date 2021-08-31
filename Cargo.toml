@@ -1,6 +1,6 @@
 [package]
 name = "ebacktrace"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2018"
 authors = ["KizzyCode Software Labs./Keziah Biermann <development@kizzycode.de>"]
 keywords = ["error", "backtrace"]
@@ -12,14 +12,17 @@ readme = "README.md"
 
 
 [badges]
-travis-ci = { repository = "KizzyCode/ebacktrace-rust" }
 appveyor = { repository = "KizzyCode/ebacktrace-rust" }
 
 
 [features]
-default = ["force_backtrace", "derive_display"]
-force_backtrace = []
+default = ["derive_display"]
 derive_display = []
+
+
+[dependencies]
+# TODO: Drop-in until `std::backtrace` is stable
+backtrace = "0.3"
 
 
 [profile.release]

@@ -1,11 +1,10 @@
 [![License BSD-2-Clause](https://img.shields.io/badge/License-BSD--2--Clause-blue.svg)](https://opensource.org/licenses/BSD-2-Clause)
 [![License MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Travis CI](https://travis-ci.com/KizzyCode/ebacktrace-rust.svg?branch=master)](https://travis-ci.com/KizzyCode/ebacktrace-rust)
 [![AppVeyor CI](https://ci.appveyor.com/api/projects/status/github/KizzyCode/ebacktrace-rust?svg=true)](https://ci.appveyor.com/project/KizzyCode/ebacktrace-rust)
 [![docs.rs](https://docs.rs/ebacktrace/badge.svg)](https://docs.rs/ebacktrace)
 [![crates.io](https://img.shields.io/crates/v/ebacktrace.svg)](https://crates.io/crates/ebacktrace)
 [![Download numbers](https://img.shields.io/crates/d/ebacktrace.svg)](https://crates.io/crates/ebacktrace)
-[![dependency status](https://deps.rs/crate/ebacktrace/0.1.0/status.svg)](https://deps.rs/crate/ebacktrace/0.1.0)
+[![dependency status](https://deps.rs/crate/ebacktrace/0.3.0/status.svg)](https://deps.rs/crate/ebacktrace/0.3.0)
 
 
 # `ebacktrace`
@@ -17,8 +16,7 @@ description of the error.
 
 ## Example
 ```rust
-#![feature(backtrace)]
-#[macro_use] extern crate ebacktrace;
+use ebacktrace::define_error;
 
 /// The error kind
 #[derive(Debug, Copy, Clone)]
@@ -41,9 +39,7 @@ will_fail().unwrap();
 
 
 ## Features
-This crate currently has two feature gates:
-  - `force_backtrace` (enabled by default): Use `Backtrace::force_capture` (instead of `Backtrace::capture`) to always
-    capture a backtrace regardless whether `RUST_BACKTRACE` is set or not.
+This crate currently has one feature gate:
   - `derive_display` (enabled by default): Use the `Display`-trait for `Etrace<MyType>` using the `Debug` representation 
     of `MyType` (instead of the `Display` representation). This way you can pretty-print the underlying error types
     without the necessity to manually implement the `Display`-trait for them.
