@@ -1,26 +1,49 @@
 environment:
   matrix:
-    - TARGET: x86_64-pc-windows-msvc
-    - TARGET: i686-pc-windows-msvc
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      TARGET: x86_64-pc-windows-msvc
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      TARGET: i686-pc-windows-msvc
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      TARGET: x86_64-pc-windows-gnu
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      TARGET: i686-pc-windows-gnu
 
-# FIXME: Remove `--default-toolchain nightly-msvc` once https://github.com/rust-lang/rust/pull/72981 has been stabilized
-install:
-  - appveyor DownloadFile https://win.rustup.rs/ -FileName rustup-init.exe
-  - rustup-init.exe -y --default-host %TARGET% --default-toolchain nightly-msvc
-  - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
-  - rustc -V
-  - cargo -V
+    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu2004
+      TARGET: x86_64-unknown-linux-gnu
+
+    - APPVEYOR_BUILD_WORKER_IMAGE: macOS
+      TARGET: x86_64-apple-darwin
+
+for:
+  - matrix:
+      only:
+        - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+    install:
+      - appveyor DownloadFile https://win.rustup.rs/ -FileName rustup-init.exe
+      - rustup-init.exe -y --default-toolchain nightly --default-host %TARGET%
+      - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
+  
+  - matrix:
+      only:
+        - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu2004
+    install:
+      - curl https://sh.rustup.rs -sSf -o rustup-init.sh
+      - sh rustup-init.sh -y --default-toolchain nightly --default-host $TARGET
+      - source $HOME/.cargo/env
+  
+  - matrix:
+      only:
+        - APPVEYOR_BUILD_WORKER_IMAGE: macOS
+    install:
+      - curl https://sh.rustup.rs -sSf -o rustup-init.sh
+      - sh rustup-init.sh -y --default-toolchain nightly --default-host $TARGET
+      - source $HOME/.cargo/env
 
 build: false
 
-# FIXME: Remove +nightly once https://github.com/rust-lang/rust/pull/72981 has been stabilized
 test_script:
-  - cargo +nightly test --verbose --no-default-features
-  - cargo +nightly test --verbose --no-default-features --features="force_backtrace"
-  - cargo +nightly test --verbose --no-default-features --features="derive_display"
-  - cargo +nightly test --verbose --no-default-features --features="force_backtrace,derive_display"
-
-  - cargo +nightly test --verbose --release --no-default-features
-  - cargo +nightly test --verbose --release --no-default-features --features="force_backtrace"
-  - cargo +nightly test --verbose --release --no-default-features --features="derive_display"
-  - cargo +nightly test --verbose --release --no-default-features --features="force_backtrace,derive_display"
+  - cargo test --verbose
+  - cargo test --verbose --release
+  - cargo test --verbose --no-default-features
+  - cargo test --verbose --release --no-default-features
