@@ -14,10 +14,10 @@ platform:
 
 # The Rust feature matrix
 configuration:
-  - ""
-  - derive_display
-  - force_backtrace
-  - derive_display,force_backtrace
+  - --features=""
+  - --features="derive_display"
+  - --features="force_backtrace"
+  - --features="derive_display,force_backtrace"
 
 
 # General environment vars
@@ -46,8 +46,8 @@ for:
       - rustup-init.exe -y --default-host "%PLATFORM%"
       - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
     test_script:
-      - cargo test --verbose --no-default-features --features="%CONFIGURATION%"
-      - cargo test --verbose --release --no-default-features --features="%CONFIGURATION%"
+      - cargo test --verbose --no-default-features %CONFIGURATION%
+      - cargo test --verbose --release --no-default-features %CONFIGURATION%
   
   # Linux specific build settings
   - matrix:
@@ -60,8 +60,8 @@ for:
       - sh rustup-init.sh -y --default-host "$PLATFORM"
       - source $HOME/.cargo/env
     test_script:
-      - cargo test --verbose --no-default-features --features="$CONFIGURATION"
-      - cargo test --verbose --release --no-default-features --features="$CONFIGURATION"
+      - cargo test --verbose --no-default-features $CONFIGURATION
+      - cargo test --verbose --release --no-default-features $CONFIGURATION
   
   # macOS specific build settings
   - matrix:
@@ -74,5 +74,5 @@ for:
       - sh rustup-init.sh -y --default-host "$PLATFORM"
       - source $HOME/.cargo/env
     test_script:
-      - cargo test --verbose --no-default-features --features="$CONFIGURATION"
-      - cargo test --verbose --release --no-default-features --features="$CONFIGURATION"
+      - cargo test --verbose --no-default-features $CONFIGURATION
+      - cargo test --verbose --release --no-default-features $CONFIGURATION
