@@ -1,4 +1,4 @@
-# The rust target platforms
+# The Rust target platforms
 platform:
   - x86_64-pc-windows-msvc
   - i686-pc-windows-msvc
@@ -8,7 +8,7 @@ platform:
   - x86_64-apple-darwin
 
 
-# The rust feature matrix
+# The Rust feature matrix
 configuration:
   - ""
   - derive_display
@@ -18,9 +18,11 @@ configuration:
 
 # General environment vars
 environment:
+  # Promote warnings to errors
   RUSTFLAGS: -D warnings
 
 
+# Fail fast if one job in the matrix fails
 matrix:
   fast_finish: true
 
@@ -37,7 +39,7 @@ for:
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     install:
       - appveyor DownloadFile https://win.rustup.rs/ -FileName rustup-init.exe
-      - rustup-init.exe -y --default-host %TARGET%
+      - rustup-init.exe -y --default-host "%PLATFORM%"
       - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
     test_script:
       - cargo test --verbose --no-default-features --features="%CONFIGURATION%"
@@ -51,7 +53,7 @@ for:
       APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu2004
     install:
       - curl https://sh.rustup.rs -sSf -o rustup-init.sh
-      - sh rustup-init.sh -y --default-host $TARGET
+      - sh rustup-init.sh -y --default-host "$PLATFORM"
       - source $HOME/.cargo/env
     test_script:
       - cargo test --verbose --no-default-features --features="$CONFIGURATION"
@@ -65,7 +67,7 @@ for:
       APPVEYOR_BUILD_WORKER_IMAGE: macOS
     install:
       - curl https://sh.rustup.rs -sSf -o rustup-init.sh
-      - sh rustup-init.sh -y --default-host $TARGET
+      - sh rustup-init.sh -y --default-host "$PLATFORM"
       - source $HOME/.cargo/env
     test_script:
       - cargo test --verbose --no-default-features --features="$CONFIGURATION"
