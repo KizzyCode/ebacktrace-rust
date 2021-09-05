@@ -1,3 +1,7 @@
+# Since we use custom test script, disable the default build action
+build: false
+
+
 # The Rust target platforms
 platform:
   - x86_64-pc-windows-msvc
