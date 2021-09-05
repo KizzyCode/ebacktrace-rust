@@ -14,10 +14,10 @@ platform:
 
 # The Rust feature matrix
 configuration:
-  - --features=""
-  - --features="derive_display"
-  - --features="force_backtrace"
-  - --features="derive_display,force_backtrace"
+  - --features=
+  - --features=derive_display
+  - --features=force_backtrace
+  - --features=derive_display,force_backtrace
 
 
 # General environment vars
