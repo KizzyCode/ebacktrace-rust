@@ -1,62 +1,72 @@
+# The rust target platforms
+platform:
+  - x86_64-pc-windows-msvc
+  - i686-pc-windows-msvc
+  - x86_64-pc-windows-gnu
+  - i686-pc-windows-gnu
+  - x86_64-unknown-linux-gnu
+  - x86_64-apple-darwin
+
+
+# The rust feature matrix
+configuration:
+  - ""
+  - derive_display
+  - force_backtrace
+  - derive_display,force_backtrace
+
+
+# General environment vars
 environment:
   RUSTFLAGS: -D warnings
 
-  matrix:
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-      TARGET: x86_64-pc-windows-msvc
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-      TARGET: i686-pc-windows-msvc
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-      TARGET: x86_64-pc-windows-gnu
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-      TARGET: i686-pc-windows-gnu
 
-    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu2004
-      TARGET: x86_64-unknown-linux-gnu
+matrix:
+  fast_finish: true
 
-    - APPVEYOR_BUILD_WORKER_IMAGE: macOS
-      TARGET: x86_64-apple-darwin
 
 for:
+  # Windows specific build settings
   - matrix:
       only:
-        - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+        - platform: x86_64-pc-windows-msvc
+        - platform: i686-pc-windows-msvc
+        - platform: x86_64-pc-windows-gnu
+        - platform: i686-pc-windows-gnu
+    environment:
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
     install:
       - appveyor DownloadFile https://win.rustup.rs/ -FileName rustup-init.exe
-      - rustup-init.exe -y --default-toolchain nightly --default-host %TARGET%
+      - rustup-init.exe -y --default-host %TARGET%
       - set PATH=%PATH%;C:\Users\appveyor\.cargo\bin
+    test_script:
+      - cargo test --verbose --no-default-features --features="%CONFIGURATION%"
+      - cargo test --verbose --release --no-default-features --features="%CONFIGURATION%"
   
+  # Linux specific build settings
   - matrix:
       only:
-        - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu2004
+        - platform: x86_64-unknown-linux-gnu
+    environment:
+      APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu2004
     install:
       - curl https://sh.rustup.rs -sSf -o rustup-init.sh
-      - sh rustup-init.sh -y --default-toolchain nightly --default-host $TARGET
+      - sh rustup-init.sh -y --default-host $TARGET
       - source $HOME/.cargo/env
+    test_script:
+      - cargo test --verbose --no-default-features --features="$CONFIGURATION"
+      - cargo test --verbose --release --no-default-features --features="$CONFIGURATION"
   
+  # macOS specific build settings
   - matrix:
       only:
-        - APPVEYOR_BUILD_WORKER_IMAGE: macOS
+        - platform: x86_64-apple-darwin
+    environment:
+      APPVEYOR_BUILD_WORKER_IMAGE: macOS
     install:
       - curl https://sh.rustup.rs -sSf -o rustup-init.sh
-      - sh rustup-init.sh -y --default-toolchain nightly --default-host $TARGET
+      - sh rustup-init.sh -y --default-host $TARGET
       - source $HOME/.cargo/env
-
-build: false
-
-test_script:
-  # Features: None
-  - cargo test --verbose --no-default-features --features=""
-  - cargo test --verbose --release --no-default-features --features=""
-
-  # Features: A
-  - cargo test --verbose --no-default-features --features="derive_display"
-  - cargo test --verbose --release --no-default-features --features="derive_display"
-
-  # Features: B
-  - cargo test --verbose --no-default-features --features="force_backtrace"
-  - cargo test --verbose --release --no-default-features --features="force_backtrace"
-
-  # Features: AB
-  - cargo test --verbose --no-default-features --features="derive_display,force_backtrace"
-  - cargo test --verbose --release --no-default-features --features="derive_display,force_backtrace"
+    test_script:
+      - cargo test --verbose --no-default-features --features="$CONFIGURATION"
+      - cargo test --verbose --release --no-default-features --features="$CONFIGURATION"
