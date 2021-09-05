@@ -140,6 +140,8 @@ macro_rules! define_error {
                 writeln!(f)?;
 
                 // Print the backtrace
+                writeln!(f)?;
+                writeln!(f, "Backtrace:")?;
                 write!(f, "{}", &self.backtrace)?;
                 writeln!(f)?;
                 Ok(())
@@ -156,6 +158,8 @@ macro_rules! define_error {
                 writeln!(f)?;
 
                 // Print the backtrace
+                writeln!(f)?;
+                writeln!(f, "Backtrace:")?;
                 write!(f, "{}", &self.backtrace)?;
                 writeln!(f)?;
                 Ok(())
