@@ -1,7 +1,7 @@
 //! Implements a backtrace
 
 use std::{ 
-    env, cell::RefCell,
+    cell::RefCell,
     fmt::{ self, Display, Formatter }
 };
 
@@ -29,7 +29,8 @@ impl Backtrace {
         // Determine whether we should capture a backtrace or not
         #[cfg(not(feature = "force_backtrace"))]
         let capture_backtrace = {
-            let rust_backtrace = env::var("RUST_BACKTRACE").unwrap_or_default();
+            // HACK: Use full path to avoid "unused_imports"-errors when using "force_backtrace"
+            let rust_backtrace = std::env::var("RUST_BACKTRACE").unwrap_or_default();
             matches!(rust_backtrace.as_str(), "1" | "true" | "full")
         };
         #[cfg(feature = "force_backtrace")]
