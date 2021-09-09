@@ -33,13 +33,15 @@ fn will_fail() -> Result<(), Error<ErrorKind>> {
     Err(ErrorKind::Testolope)?
 }
 
-// Will panic with a nice fully-backtraced error
-will_fail().unwrap();
+// Will panic with a nice error
+will_fail().map_err(|e| e.to_string()).unwrap();
 ```
 
 
 ## Features
-This crate currently has one feature gate:
+This crate currently has two feature gates:
   - `derive_display` (enabled by default): Use the `Display`-trait for `Etrace<MyType>` using the `Debug` representation 
     of `MyType` (instead of the `Display` representation). This way you can pretty-print the underlying error types
     without the necessity to manually implement the `Display`-trait for them.
+  - `force_backtrace` (disabled by default): If `force_backtrace` is enable, the backtrace is always captured,
+    regardless whether `RUST_BACKTRACE` is set or not.

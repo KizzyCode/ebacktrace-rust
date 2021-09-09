@@ -32,22 +32,28 @@
 //!     Err(ErrorKind::Testolope)?
 //! }
 //! 
-//! // Will panic with a nice fully-backtraced error
-//! will_fail().unwrap();
+//! // Will panic with a nice error
+//! will_fail().map_err(|e| e.to_string()).unwrap();
 //! ```
 //! 
 //! ## Features
-//! This crate currently has one feature gate:
-//!   - `derive_display` (enabled by default): Implements the `Display`-trait for `Etrace<MyType>` using the `Debug`
+//! This crate currently has two feature gates:
+//!   - `derive_display` (enabled by default): Use the `Display`-trait for `Etrace<MyType>` using the `Debug`
 //!     representation of `MyType` (instead of the `Display` representation). This way you can pretty-print the underlying
 //!     error types without the necessity to manually implement the `Display`-trait for them.
+//!   - `force_backtrace` (disabled by default): If `force_backtrace` is enable, the backtrace is always captured,
+//!     regardless whether `RUST_BACKTRACE` is set or not.
 
-/// Implements a backtrace
+
+/// Implements a backtrace drop-in replacement until `$crate::backtrace::Backtrace` becomes stable
 #[doc(hidden)]
 pub mod backtrace;
 
 
-/// Defines a custom error with descripion
+/// Defines a custom error generic `$name<E>` where `E` is an arbitrary payload type
+///
+/// _Note:_ We use a macro to define a new type so that crates can easily implement stuff like `From<T>` for their errors
+/// which would not be possible if we define the error type here in this crate.
 #[macro_export]
 macro_rules! define_error {
     ($name:ident) => {
@@ -55,34 +61,34 @@ macro_rules! define_error {
         pub struct $name<E> {
             err: E,
             desc: std::borrow::Cow<'static, str>,
-            backtrace: std::sync::Arc<$crate::backtrace::Backtrace>
+            backtrace: Option<std::sync::Arc<$crate::backtrace::Backtrace>>
         }
         impl<E> $name<E> {
             /// Wraps an error `err`
             pub fn new(err: E) -> Self {
-                let backtrace = $crate::backtrace::Backtrace::capture();
+                let backtrace = $crate::backtrace::Backtrace::capture().map(std::sync::Arc::new);
                 Self {
                     err,
                     desc: std::borrow::Cow::Borrowed(""),
-                    backtrace: std::sync::Arc::new(backtrace)
+                    backtrace
                 }
             }
             /// Wraps an error `err` together with a description `desc`
             pub fn with_str(err: E, desc: &'static str) -> Self {
-                let backtrace = $crate::backtrace::Backtrace::capture();
+                let backtrace = $crate::backtrace::Backtrace::capture().map(std::sync::Arc::new);
                 Self {
                     err,
                     desc: std::borrow::Cow::Borrowed(desc),
-                    backtrace: std::sync::Arc::new(backtrace)
+                    backtrace
                 }
             }
             /// Wraps an error `err` together with a description `desc`
             pub fn with_string<S>(err: E, desc: S) -> Self where S: std::string::ToString {
-                let backtrace = $crate::backtrace::Backtrace::capture();
+                let backtrace = $crate::backtrace::Backtrace::capture().map(std::sync::Arc::new);
                 Self {
                     err,
                     desc: std::borrow::Cow::Owned(desc.to_string()),
-                    backtrace: std::sync::Arc::new(backtrace)
+                    backtrace
                 }
             }
 
@@ -93,6 +99,13 @@ macro_rules! define_error {
             /// The error description
             pub const fn desc(&self) -> &std::borrow::Cow<'static, str> {
                 &self.desc
+            }
+            // TODO: Replace with `std::error::Error::backtrace` when `std::backtrace::Backtrace` becomes stable
+            /// The underlying backtrace
+            pub fn backtrace(&self) -> Option<&$crate::backtrace::Backtrace> {
+                // Unwrap the Arc and reference it
+                let backtrace = self.backtrace.as_ref()?;
+                Some(backtrace.as_ref())
             }
         }
         impl<E> std::ops::Deref for $name<E> {
@@ -113,7 +126,7 @@ macro_rules! define_error {
             }
             // TODO: Reimplement when `std::backtrace::Backtrace` becomes stable
             /*
-            fn backtrace(&self) -> Option<&$crate::backtrace::Backtrace> {
+            fn backtrace(&self) -> Option<&std::backtrace::Backtrace> {
                 Some(&self.backtrace)
             }
             */
@@ -137,13 +150,14 @@ macro_rules! define_error {
                 if !self.desc.is_empty() {
                     write!(f, " ({})", &self.desc)?;
                 }
-                writeln!(f)?;
 
-                // Print the backtrace
-                writeln!(f)?;
-                writeln!(f, "Backtrace:")?;
-                write!(f, "{}", &self.backtrace)?;
-                writeln!(f)?;
+                // Print the backtrace if we have any
+                if let Some(backtrace) = self.backtrace.as_ref() {
+                    writeln!(f)?;
+                    writeln!(f)?;
+                    writeln!(f, "Backtrace:")?;
+                    write!(f, "{}", backtrace)?;
+                }
                 Ok(())
             }
         }
@@ -155,13 +169,14 @@ macro_rules! define_error {
                 if !self.desc.is_empty() {
                     write!(f, " ({})", &self.desc)?;
                 }
-                writeln!(f)?;
 
                 // Print the backtrace
-                writeln!(f)?;
-                writeln!(f, "Backtrace:")?;
-                write!(f, "{}", &self.backtrace)?;
-                writeln!(f)?;
+                if let Some(backtrace) = self.backtrace.as_ref() {
+                    writeln!(f)?;
+                    writeln!(f)?;
+                    writeln!(f, "Backtrace:")?;
+                    write!(f, "{}", backtrace)?;
+                }
                 Ok(())
             }
         }

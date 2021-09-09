@@ -1,6 +1,6 @@
 [package]
 name = "ebacktrace"
-version = "0.3.1"
+version = "0.3.2"
 edition = "2018"
 authors = ["KizzyCode Software Labs./Keziah Biermann <development@kizzycode.de>"]
 keywords = ["error", "backtrace"]
