@@ -33,7 +33,10 @@
 //! }
 //! 
 //! // Will panic with a nice error
-//! will_fail().map_err(|e| e.to_string()).unwrap();
+//! if let Err(e) = will_fail() {
+//!     eprintln!("Error: {:?}", e);
+//!     panic!("Fatal error")
+//! }
 //! ```
 //! 
 //! ## Features

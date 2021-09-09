@@ -2,7 +2,7 @@
 
 use std::{ 
     cell::RefCell,
-    fmt::{ self, Display, Formatter }
+    fmt::{ self, Debug, Display, Formatter }
 };
 
 
@@ -17,7 +17,6 @@ struct InnerMut {
 
 
 /// The backtrace implementation
-#[derive(Debug)]
 pub struct Backtrace {
     /// The wrapped backtrace; will use `std::backtrace` once it is stable
     inner: RefCell<InnerMut>
@@ -51,9 +50,31 @@ impl Backtrace {
         Some(Self { inner: RefCell::new(inner_mut) })
     }
 }
+impl Debug for Backtrace {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        // Check whether we have a resolved backtrace already or not
+        let has_backtrace = {
+            // Get the cached backtrace
+            let backtrace_ref = self.inner.borrow();
+            backtrace_ref.string.is_some()
+        };
+
+        // Resolve the backtrace if necessary
+        if !has_backtrace {
+            let mut inner_mut = self.inner.borrow_mut();
+            inner_mut.backtrace.resolve();
+            inner_mut.string = Some(format!("{:?}", inner_mut.backtrace));
+        }
+
+        // Write the struct
+        f.debug_struct("Backtrace")
+            .field("inner", &self.inner)
+            .finish()
+    }
+}
 impl Display for Backtrace {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        // Unwrap the backtrace and check whether we have a formatted backtrace already or not
+        // Check whether we have a resolved backtrace already or not
         let has_backtrace = {
             // Get the cached backtrace
             let backtrace_ref = self.inner.borrow();

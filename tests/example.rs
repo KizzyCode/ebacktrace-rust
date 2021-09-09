@@ -21,5 +21,15 @@ fn will_fail() -> Result<(), Error<ErrorKind>> {
 #[should_panic]
 fn test() {
     // Will panic with a nice error
-    will_fail().map_err(|e| e.to_string()).unwrap();
+    if let Err(e) = will_fail() {
+        // Print the debugging representation
+        #[cfg(not(feature = "derive_display"))]
+        eprintln!("Error: {:?}", e);
+        
+        // Print the display representation
+        #[cfg(feature = "derive_display")]
+        eprintln!("Error: {}", e);
+        
+        panic!("Fatal error")
+    }
 }
