@@ -29,6 +29,5 @@ backtrace = "0.3"
 [profile.release]
 overflow-checks = true
 
-
 [profile.bench]
 overflow-checks = true
