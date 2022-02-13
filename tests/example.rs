@@ -13,7 +13,7 @@ define_error!(Error);
 
 /// A function that will always fail
 fn will_fail() -> Result<(), Error<ErrorKind>> {
-    Err(ErrorKind::Testolope)?
+    Err(ErrorKind::Testolope.into())
 }
 
 
