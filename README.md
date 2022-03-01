@@ -4,7 +4,7 @@
 [![docs.rs](https://docs.rs/ebacktrace/badge.svg)](https://docs.rs/ebacktrace)
 [![crates.io](https://img.shields.io/crates/v/ebacktrace.svg)](https://crates.io/crates/ebacktrace)
 [![Download numbers](https://img.shields.io/crates/d/ebacktrace.svg)](https://crates.io/crates/ebacktrace)
-[![dependency status](https://deps.rs/crate/ebacktrace/0.5.0/status.svg)](https://deps.rs/crate/ebacktrace/0.5.0)
+[![dependency status](https://deps.rs/crate/ebacktrace/0.5.1/status.svg)](https://deps.rs/crate/ebacktrace/0.5.1)
 
 
 # `ebacktrace`

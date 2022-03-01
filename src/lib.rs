@@ -75,22 +75,20 @@ macro_rules! define_error {
             /// Captures a backtrace and creates a new error
             pub fn new(err: E, desc: String) -> Self {
                 let backtrace = $crate::backtrace::Backtrace::capture();
+                let desc = std::borrow::Cow::Owned(desc);
                 Self::with_backtrace(err, desc, backtrace)
             }
             /// Captures a backtrace and creates a new error with a static description
             pub fn new_static(err: E, desc: &'static str) -> Self {
                 let backtrace = $crate::backtrace::Backtrace::capture();
-                Self::with_backtrace_static(err, desc, backtrace)
+                let desc = std::borrow::Cow::Borrowed(desc);
+                Self::with_backtrace(err, desc, backtrace)
             }
             /// Creates a new error with the given backtrace
-            pub const fn with_backtrace(err: E, desc: String, backtrace: Option<$crate::backtrace::Backtrace>) -> Self {
-                Self { err, desc: std::borrow::Cow::Owned(desc), backtrace }
-            }
-            /// Creates a new error with the given backtrace and a static description
-            pub const fn with_backtrace_static(err: E, desc: &'static str,
+            pub const fn with_backtrace(err: E, desc: std::borrow::Cow<'static, str>,
                 backtrace: Option<$crate::backtrace::Backtrace>) -> Self
             {
-                Self { err, desc: std::borrow::Cow::Borrowed(desc), backtrace }
+                Self { err, desc, backtrace }
             }
 
             /// The wrapped error
