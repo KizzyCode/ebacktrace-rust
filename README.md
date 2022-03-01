@@ -4,7 +4,7 @@
 [![docs.rs](https://docs.rs/ebacktrace/badge.svg)](https://docs.rs/ebacktrace)
 [![crates.io](https://img.shields.io/crates/v/ebacktrace.svg)](https://crates.io/crates/ebacktrace)
 [![Download numbers](https://img.shields.io/crates/d/ebacktrace.svg)](https://crates.io/crates/ebacktrace)
-[![dependency status](https://deps.rs/crate/ebacktrace/0.4.0/status.svg)](https://deps.rs/crate/ebacktrace/0.3.0)
+[![dependency status](https://deps.rs/crate/ebacktrace/0.5.0/status.svg)](https://deps.rs/crate/ebacktrace/0.5.0)
 
 
 # `ebacktrace`
@@ -17,6 +17,7 @@ description of the error.
 ## Example
 ```rust
 use ebacktrace::define_error;
+use std::fmt::{ self, Display, Formatter };
 
 /// The error kind
 #[derive(Debug, Copy, Clone)]
@@ -24,7 +25,11 @@ enum ErrorKind {
     MyErrorA,
     Testolope
 }
-
+impl Display for ErrorKind {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(f, "{:#?}", self)
+    }
+}
 // Define our custom error type
 define_error!(Error);
 
@@ -42,9 +47,6 @@ if let Err(e) = will_fail() {
 
 
 ## Features
-This crate currently has two feature gates:
-  - `derive_display` (enabled by default): Use the `Display`-trait for `Etrace<MyType>` using the `Debug` representation 
-    of `MyType` (instead of the `Display` representation). This way you can pretty-print the underlying error types
-    without the necessity to manually implement the `Display`-trait for them.
+This crate currently has one feature gate:
   - `force_backtrace` (disabled by default): If `force_backtrace` is enable, the backtrace is always captured,
     regardless whether `RUST_BACKTRACE` is set or not.

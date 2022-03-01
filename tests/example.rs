@@ -1,4 +1,6 @@
 use ebacktrace::define_error;
+use std::fmt::{ self, Display, Formatter };
+
 
 /// The error kind
 #[derive(Debug, Copy, Clone)]
@@ -7,9 +9,14 @@ enum ErrorKind {
     MyErrorA,
     Testolope
 }
-
+impl Display for ErrorKind {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+        write!(f, "{:#?}", self)
+    }
+}
 // Define our custom error type
 define_error!(Error);
+
 
 /// A function that will always fail
 fn will_fail() -> Result<(), Error<ErrorKind>> {
@@ -23,13 +30,12 @@ fn test() {
     // Will panic with a nice error
     if let Err(e) = will_fail() {
         // Print the debugging representation
-        #[cfg(not(feature = "derive_display"))]
         eprintln!("Error: {:?}", e);
         
         // Print the display representation
-        #[cfg(feature = "derive_display")]
         eprintln!("Error: {}", e);
         
-        panic!("Fatal error")
+        // PAAAANIIIIC
+        panic!("Fatal error: {}", e);
     }
 }

@@ -1,8 +1,8 @@
 //! Implements a backtrace
 
 use std::{ 
-    sync::Mutex,
-    fmt::{ self, Debug, Display, Formatter }
+    fmt::{ self, Debug, Display, Formatter },
+    sync::{ Arc, Mutex }
 };
 
 
@@ -32,9 +32,10 @@ impl BacktraceRaw {
 
 
 /// The backtrace implementation
+#[derive(Clone)]
 pub struct Backtrace {
     /// The wrapped backtrace; will use `std::backtrace` once it is stable
-    inner: Mutex<BacktraceRaw>
+    inner: Arc<Mutex<BacktraceRaw>>
 }
 impl Backtrace {
     /// Captures a new backtrace if `RUST_BACKTRACE` is set
@@ -49,7 +50,7 @@ impl Backtrace {
 
         // Capture the backtrace
         let backtrace = BacktraceRaw::new_thin();
-        let this = Self { inner: Mutex::new(backtrace) };
+        let this = Self { inner: Arc::new(Mutex::new(backtrace)) };
         Some(this)
     }
 
@@ -58,7 +59,7 @@ impl Backtrace {
     #[cfg(feature = "force_backtrace")]
     pub fn capture() -> Option<Self> {
         let backtrace = BacktraceRaw::new_thin();
-        let this = Self { inner: Mutex::new(backtrace) };
+        let this = Self { inner: Arc::new(Mutex::new(backtrace)) };
         Some(this)
     }
 }

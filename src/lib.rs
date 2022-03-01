@@ -16,6 +16,7 @@
 //! ## Example
 //! ```should_panic
 //! use ebacktrace::define_error;
+//! use std::fmt::{ self, Display, Formatter };
 //! 
 //! /// The error kind
 //! #[derive(Debug, Copy, Clone)]
@@ -23,7 +24,11 @@
 //!     MyErrorA,
 //!     Testolope
 //! }
-//! 
+//! impl Display for ErrorKind {
+//!     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+//!         write!(f, "{:#?}", self)
+//!     }
+//! }
 //! // Define our custom error type
 //! define_error!(Error);
 //! 
@@ -64,35 +69,28 @@ macro_rules! define_error {
         pub struct $name<E> {
             err: E,
             desc: std::borrow::Cow<'static, str>,
-            backtrace: Option<std::sync::Arc<$crate::backtrace::Backtrace>>
+            backtrace: std::option::Option<$crate::backtrace::Backtrace>
         }
         impl<E> $name<E> {
-            /// Wraps an error `err`
-            pub fn new(err: E) -> Self {
-                let backtrace = $crate::backtrace::Backtrace::capture().map(std::sync::Arc::new);
-                Self {
-                    err,
-                    desc: std::borrow::Cow::Borrowed(""),
-                    backtrace
-                }
+            /// Captures a backtrace and creates a new error
+            pub fn new(err: E, desc: String) -> Self {
+                let backtrace = $crate::backtrace::Backtrace::capture();
+                Self::with_backtrace(err, desc, backtrace)
             }
-            /// Wraps an error `err` together with a description `desc`
-            pub fn with_str(err: E, desc: &'static str) -> Self {
-                let backtrace = $crate::backtrace::Backtrace::capture().map(std::sync::Arc::new);
-                Self {
-                    err,
-                    desc: std::borrow::Cow::Borrowed(desc),
-                    backtrace
-                }
+            /// Captures a backtrace and creates a new error with a static description
+            pub fn new_static(err: E, desc: &'static str) -> Self {
+                let backtrace = $crate::backtrace::Backtrace::capture();
+                Self::with_backtrace_static(err, desc, backtrace)
             }
-            /// Wraps an error `err` together with a description `desc`
-            pub fn with_string<S>(err: E, desc: S) -> Self where S: std::string::ToString {
-                let backtrace = $crate::backtrace::Backtrace::capture().map(std::sync::Arc::new);
-                Self {
-                    err,
-                    desc: std::borrow::Cow::Owned(desc.to_string()),
-                    backtrace
-                }
+            /// Creates a new error with the given backtrace
+            pub const fn with_backtrace(err: E, desc: String, backtrace: Option<$crate::backtrace::Backtrace>) -> Self {
+                Self { err, desc: std::borrow::Cow::Owned(desc), backtrace }
+            }
+            /// Creates a new error with the given backtrace and a static description
+            pub const fn with_backtrace_static(err: E, desc: &'static str,
+                backtrace: Option<$crate::backtrace::Backtrace>) -> Self
+            {
+                Self { err, desc: std::borrow::Cow::Borrowed(desc), backtrace }
             }
 
             /// The wrapped error
@@ -106,9 +104,7 @@ macro_rules! define_error {
             // TODO: Replace with `std::error::Error::backtrace` when `std::backtrace::Backtrace` becomes stable
             /// The underlying backtrace
             pub fn backtrace(&self) -> Option<&$crate::backtrace::Backtrace> {
-                // Unwrap the Arc and reference it
-                let backtrace = self.backtrace.as_ref()?;
-                Some(backtrace.as_ref())
+                self.backtrace.as_ref()
             }
         }
         impl<E> std::ops::Deref for $name<E> {
@@ -117,9 +113,10 @@ macro_rules! define_error {
                 &self.err
             }
         }
-        impl<E> std::convert::From<E> for $name<E> {
+        impl<E> std::convert::From<E> for $name<E> where E: std::fmt::Display {
             fn from(error: E) -> Self {
-                Self::new(error)
+                let desc = error.to_string();
+                Self::new(error, desc)
             }
         }
         // Error
@@ -145,7 +142,6 @@ macro_rules! define_error {
             }
         }
         // Display
-        #[cfg(not(feature = "derive_display"))]
         impl<E> std::fmt::Display for $name<E> where E: std::fmt::Display {
             fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
                 // Write the error and description
@@ -164,29 +160,10 @@ macro_rules! define_error {
                 Ok(())
             }
         }
-        #[cfg(feature = "derive_display")]
-        impl<E> std::fmt::Display for $name<E> where E: std::fmt::Debug {
-            fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-                // Write the error and description
-                write!(f, "{:?}", &self.err)?;
-                if !self.desc.is_empty() {
-                    write!(f, " ({})", &self.desc)?;
-                }
-
-                // Print the backtrace
-                if let Some(backtrace) = self.backtrace.as_ref() {
-                    writeln!(f)?;
-                    writeln!(f)?;
-                    writeln!(f, "Backtrace:")?;
-                    write!(f, "{}", backtrace)?;
-                }
-                Ok(())
-            }
-        }
         // Default
-        impl<E> std::default::Default for $name<E> where E: std::default::Default {
+        impl<E> std::default::Default for $name<E> where E: std::default::Default + std::fmt::Display {
             fn default() -> Self {
-                Self::new(E::default())
+                Self::from(E::default())
             }
         }
         // Clone
